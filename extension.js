@@ -6,20 +6,21 @@ const { execFile } = require('child_process');
 
 let nativeBinaryPath = null;
 
-// Find native Rust binary
+// Find native Rust binary with Windows (.exe) and Unix support
 function getNativeBinary(context) {
     if (nativeBinaryPath && fs.existsSync(nativeBinaryPath)) {
         return nativeBinaryPath;
     }
 
+    const isWin = process.platform === 'win32';
+    const exeName = isWin ? 'agentrecall.exe' : 'agentrecall';
+
     const candidatePaths = [
-        context && context.extensionPath ? path.join(context.extensionPath, 'bin', 'agentrecall') : null,
-        path.join(__dirname, 'bin', 'agentrecall'),
-        path.join(__dirname, 'target', 'release', 'agentrecall'),
-        '/home/clf/agent-recall/bin/agentrecall',
-        '/home/clf/agent-recall/target/release/agentrecall',
-        path.join(os.homedir(), '.cargo', 'bin', 'agentrecall'),
-        '/usr/local/bin/agentrecall'
+        context && context.extensionPath ? path.join(context.extensionPath, 'bin', exeName) : null,
+        path.join(__dirname, 'bin', exeName),
+        path.join(__dirname, 'target', 'release', exeName),
+        path.join(os.homedir(), '.cargo', 'bin', exeName),
+        isWin ? null : path.join('/usr/local/bin', exeName)
     ].filter(Boolean);
 
     for (const p of candidatePaths) {
