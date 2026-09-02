@@ -65,7 +65,7 @@ function loadSessionIndex() {
                 if (!line.trim()) continue;
                 try {
                     const data = JSON.parse(line);
-                    if (data.id) map.set(data.id, data.thread_name || '未命名会话');
+                    if (data.id) map.set(data.id, data.thread_name || 'Untitled Session');
                 } catch (e) {}
             }
         } catch (e) {}
@@ -111,7 +111,7 @@ function getSessionsListFallback() {
             sessions.push({
                 id: sessionId,
                 agent_type: 'OpenAI Codex',
-                thread_name: indexMap.get(sessionId) || `会话 ${sessionId.slice(0, 8)}`,
+                thread_name: indexMap.get(sessionId) || `Session ${sessionId.slice(0, 8)}`,
                 updated_at: new Date(mtime).toISOString(),
                 file_path: fpath,
                 timestamp_ms: mtime
@@ -138,7 +138,7 @@ class AgentRecallTreeProvider {
         const treeItem = new vscode.TreeItem(element.thread_name, vscode.TreeItemCollapsibleState.None);
         const dateStr = element.updated_at ? new Date(element.updated_at).toLocaleString() : '';
         treeItem.description = dateStr;
-        treeItem.tooltip = `ID: ${element.id}\nAgent: ${element.agent_type}\n更新时间: ${dateStr}\n文件: ${element.file_path}`;
+        treeItem.tooltip = `ID: ${element.id}\nAgent: ${element.agent_type}\nUpdated: ${dateStr}\nFile: ${element.file_path}`;
         treeItem.iconPath = new vscode.ThemeIcon('comment-discussion');
         treeItem.command = {
             command: 'vscode.open',
@@ -174,7 +174,7 @@ class AgentRecallContentProvider {
             const md = await runNative(this.context, ['get', sessionId]);
             return md;
         } catch (e) {
-            return `# 错误\n无法获取会话 ID: \`${sessionId}\`\n\n原因: ${e.message}`;
+            return `# Error\nUnable to retrieve session ID: \`${sessionId}\`\n\nReason: ${e.message}`;
         }
     }
 }
@@ -251,7 +251,7 @@ function activate(context) {
     // Command: Search
     const searchHandler = async () => {
         const quickPick = vscode.window.createQuickPick();
-        quickPick.placeholder = 'AgentRecall ⚡ Rust 原生引擎加速检索 (按 Esc 退出)...';
+        quickPick.placeholder = 'AgentRecall ⚡ Accelerated search with native Rust engine (Press Esc to exit)...';
         quickPick.matchOnDescription = true;
         quickPick.matchOnDetail = true;
 
@@ -261,7 +261,7 @@ function activate(context) {
             quickPick.items = sessions.map(s => ({
                 label: `$(comment-discussion) ${s.thread_name}`,
                 description: new Date(s.updated_at).toLocaleString(),
-                detail: `Agent: ${s.agent_type} | 会话 ID: ${s.id.slice(0, 8)}... (点击查看完整对话)`,
+                detail: `Agent: ${s.agent_type} | Session ID: ${s.id.slice(0, 8)}... (Click to open full dialogue)`,
                 sessionId: s.id
             }));
         } catch (e) {}
@@ -281,26 +281,26 @@ function activate(context) {
 
                     if (matches.length === 0) {
                         quickPick.items = [{
-                            label: `$(warning) 未找到包含 "${keyword}" 的任何提问、思考或回答`,
-                            description: '请尝试其他关键词',
+                            label: `$(warning) No prompts, thoughts, or responses found matching "${keyword}"`,
+                            description: 'Try another keyword',
                             detail: ''
                         }];
                     } else {
                         quickPick.items = matches.map(m => {
                             let roleIcon = '$(comment)';
-                            let roleLabel = '用户输入';
+                            let roleLabel = 'User';
                             if (m.role === 'thought') {
                                 roleIcon = '$(symbol-keyword)';
-                                roleLabel = '思考过程';
+                                roleLabel = 'Thought';
                             } else if (m.role === 'assistant') {
                                 roleIcon = '$(hubot)';
-                                roleLabel = '回答输出';
+                                roleLabel = 'Response';
                             }
 
                             return {
                                 label: `${roleIcon} [${roleLabel}] ${m.snippet}`,
                                 description: `${m.thread_name}`,
-                                detail: `[${m.agent_type}] 时间: ${new Date(m.updated_at).toLocaleString()} | 会话: ${m.thread_name}`,
+                                detail: `[${m.agent_type}] Time: ${new Date(m.updated_at).toLocaleString()} | Session: ${m.thread_name}`,
                                 sessionId: m.session_id,
                                 anchorText: m.anchor_text,
                                 searchQuery: keyword
@@ -309,7 +309,7 @@ function activate(context) {
                     }
                 } catch (e) {
                     quickPick.items = [{
-                        label: `$(error) 搜索出错`,
+                        label: `$(error) Search failed`,
                         description: e.message,
                         detail: ''
                     }];
@@ -337,7 +337,7 @@ function activate(context) {
     // Command: Refresh History
     const refreshHandler = () => {
         treeProvider.refresh();
-        vscode.window.showInformationMessage('AgentRecall 历史会话列表已刷新');
+        vscode.window.showInformationMessage('AgentRecall session history refreshed');
     };
     const refreshCmds = ['agentrecall.refreshHistory'];
     for (const cmd of refreshCmds) {
@@ -358,10 +358,10 @@ function activate(context) {
             const exportStdout = await runNative(context, ['export', '-o', targetDir, '--json']);
             const res = JSON.parse(exportStdout);
             vscode.window.showInformationMessage(
-                `⚡ AgentRecall 原生引擎已极速导出 ${res.count} 个会话至 ${targetDir}！`
+                `⚡ AgentRecall native engine exported ${res.count} sessions to ${targetDir}!`
             );
         } catch (e) {
-            vscode.window.showErrorMessage(`导出失败: ${e.message}`);
+            vscode.window.showErrorMessage(`Export failed: ${e.message}`);
         }
     };
     const syncCmds = ['agentrecall.syncToWorkspace'];

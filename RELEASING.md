@@ -43,9 +43,9 @@ subscription ID are used by this workflow.
 Update the version in both `package.json` and `Cargo.toml`, commit the changes, and then create a matching tag:
 
 ```bash
-git tag -a v0.1.0 -m "AgentRecall v0.1.0"
+git tag -a v0.1.1 -m "AgentRecall v0.1.1"
 git push origin main
-git push origin v0.1.0
+git push origin v0.1.1
 ```
 
 The release workflow rejects tags that do not exactly match the versions in both manifests. It tests the Rust core, creates platform-specific VSIX files, publishes those exact files to the VS Code Marketplace, and then attaches them and their checksums to a GitHub release.

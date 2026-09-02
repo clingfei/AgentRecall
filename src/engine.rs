@@ -130,10 +130,10 @@ impl RecallEngine {
         ));
         md.push_str(&format!("> **Session ID**: `{}`  \n", session.id));
         if let Some(cwd) = &session.cwd {
-            md.push_str(&format!("> **工作目录 (CWD)**: `{}`  \n", cwd));
+            md.push_str(&format!("> **Working Directory (CWD)**: `{}`  \n", cwd));
         }
         if !session.updated_at.is_empty() {
-            md.push_str(&format!("> **时间**: {}  \n", session.updated_at));
+            md.push_str(&format!("> **Updated At**: {}  \n", session.updated_at));
         }
         md.push_str("\n---\n\n");
 
@@ -141,20 +141,20 @@ impl RecallEngine {
             match ev.role {
                 MessageRole::User => {
                     md.push_str(&format!(
-                        "\n## 👤 用户输入 (User)\n\n{}\n\n---\n",
+                        "\n## 👤 User\n\n{}\n\n---\n",
                         ev.text
                     ));
                 }
                 MessageRole::Thought => {
                     let formatted = ev.text.replace('\n', "\n> ");
                     md.push_str(&format!(
-                        "\n> 💭 **思考过程 / 行动前述**  \n> {}\n",
+                        "\n> 💭 **Thought / Preamble**  \n> {}\n",
                         formatted
                     ));
                 }
                 MessageRole::Assistant => {
                     md.push_str(&format!(
-                        "\n## 🤖 回答输出 (Response)\n\n{}\n\n---\n",
+                        "\n## 🤖 Response\n\n{}\n\n---\n",
                         ev.text
                     ));
                 }
@@ -196,7 +196,7 @@ impl RecallEngine {
                         success_count.fetch_add(1, Ordering::Relaxed);
                     }
                     Err(e) => {
-                        eprintln!("警告: 导出会话 {} 失败: {}", session.id, e);
+                        eprintln!("Warning: Failed to export session {}: {}", session.id, e);
                     }
                 }
             }

@@ -46,7 +46,7 @@ impl CodexParser {
                         let thread_name = val
                             .get("thread_name")
                             .and_then(|v| v.as_str())
-                            .unwrap_or("未命名会话")
+                            .unwrap_or("Untitled Session")
                             .to_string();
                         let updated_at = val
                             .get("updated_at")
@@ -88,7 +88,7 @@ impl CodexParser {
                     let after_sel = &text[sel_idx + "## Active selection of the file:".len()..];
                     let line = after_sel.lines().find(|l| !l.trim().is_empty()).unwrap_or("");
                     if !line.trim().is_empty() && !line.starts_with('#') {
-                        format!("> 📌 **选中文本**: `{}`\n\n", line.trim())
+                        format!("> 📌 **Active Selection**: `{}`\n\n", line.trim())
                     } else {
                         String::new()
                     }
@@ -167,7 +167,7 @@ impl AgentParser for CodexParser {
                     let (thread_name, updated_at) = match index_map.get(&sid) {
                         Some((name, time)) => (name.clone(), time.clone()),
                         None => (
-                            format!("会话 {}", &sid[..sid.len().min(8)]),
+                            format!("Session {}", &sid[..sid.len().min(8)]),
                             chrono::DateTime::from_timestamp_millis(mtime_ms)
                                 .map(|dt| dt.to_rfc3339())
                                 .unwrap_or_default(),

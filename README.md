@@ -32,7 +32,7 @@
 
 - 🔍 **Real-Time Full-Text Search (`Ctrl + Alt + F` / `Cmd + Alt + F`)**
   - Search across **User Inputs**, **Agent Thinking Processes**, and **Assistant Responses**.
-  - Clearly tags match categories (`[用户输入]`, `[思考过程]`, `[回答输出]`) with contextual previews.
+  - Clearly tags match categories (`[User]`, `[Thought]`, `[Response]`) with contextual previews.
 
 - 🎯 **Precise Jump & Highlight**
   - Selecting any search result immediately opens the conversation document, scrolls the editor directly to the matching line, and highlights the keyword.
@@ -40,9 +40,9 @@
 - 🧼 **Boilerplate-Free Clean Markdown**
   - Automatically filters internal framework prompts, `AGENTS.md` injected templates, and noisy empty tool call frames.
   - Generates clear, readable sections:
-    - 👤 `## 👤 用户输入 (User)`
-    - 💭 `> 💭 思考过程 / 行动前述`
-    - 🤖 `## 🤖 回答输出 (Response)`
+    - 👤 `## 👤 User`
+    - 💭 `> 💭 Thought / Preamble`
+    - 🤖 `## 🤖 Response`
 
 - 📂 **Dual Sidebar Views**
   - Browse historical sessions by update time in both the **Activity Bar (AgentRecall)** and the **Explorer (File Tree)** panel.

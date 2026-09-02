@@ -42,9 +42,9 @@ pub enum MessageRole {
 impl MessageRole {
     pub fn label(&self) -> &'static str {
         match self {
-            MessageRole::User => "用户输入",
-            MessageRole::Thought => "思考过程",
-            MessageRole::Assistant => "回答输出",
+            MessageRole::User => "User",
+            MessageRole::Thought => "Thought",
+            MessageRole::Assistant => "Response",
         }
     }
 }

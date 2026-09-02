@@ -3,7 +3,7 @@
   "displayName": "AgentRecall",
   "description": "Unified search, history recall, and export for AI coding agents (OpenAI Codex, OpenCode, AGY, Claude Code) in VS Code.",
   "publisher": "clingfei",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "license": "MIT",
   "icon": "resources/logo.png",
   "repository": {
@@ -33,8 +33,7 @@
     "vscode": "^1.75.0"
   },
   "categories": [
-    "Other",
-    "Search"
+    "Other"
   ],
   "activationEvents": [
     "onView:agentRecallHistoryView",
@@ -48,19 +47,19 @@
     "commands": [
       {
         "command": "agentrecall.search",
-        "title": "Search Agent History (搜索会话记录)",
+        "title": "Search Agent History",
         "category": "AgentRecall",
         "icon": "$(search)"
       },
       {
         "command": "agentrecall.refreshHistory",
-        "title": "Refresh History (刷新历史记录)",
+        "title": "Refresh History",
         "category": "AgentRecall",
         "icon": "$(refresh)"
       },
       {
         "command": "agentrecall.syncToWorkspace",
-        "title": "Export All Chats to Workspace (导出到工作区以便全文搜索)",
+        "title": "Export All Chats to Workspace",
         "category": "AgentRecall",
         "icon": "$(export)"
       }
@@ -91,7 +90,7 @@
       "explorer": [
         {
           "id": "agentRecallHistoryExplorerView",
-          "name": "AgentRecall (历史会话)"
+          "name": "AgentRecall (History)"
         }
       ]
     },

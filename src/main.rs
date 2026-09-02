@@ -64,7 +64,7 @@ fn main() {
             if json {
                 println!("{}", serde_json::to_string(&sessions).unwrap());
             } else {
-                println!("\n{} 找到 {} 个会话:\n", "AgentRecall".bold().cyan(), sessions.len());
+                println!("\n{} Found {} sessions:\n", "AgentRecall".bold().cyan(), sessions.len());
                 for s in &sessions {
                     println!(
                         "  {} {} {} [{}]",
@@ -86,16 +86,16 @@ fn main() {
                 println!("{}", serde_json::to_string(&matches).unwrap());
             } else {
                 println!(
-                    "\n🔍 搜索 \"{}\" 命中 {} 处:\n{}",
+                    "\n🔍 Search for \"{}\" found {} matches:\n{}",
                     query.yellow().bold(),
                     matches.len(),
                     "=".repeat(60).dimmed()
                 );
                 for m in &matches {
                     let role_tag = match m.role {
-                        models::MessageRole::User => "[用户输入]".green(),
-                        models::MessageRole::Thought => "[思考过程]".magenta(),
-                        models::MessageRole::Assistant => "[回答输出]".cyan(),
+                        models::MessageRole::User => format!("[{}]", m.role.label()).green(),
+                        models::MessageRole::Thought => format!("[{}]", m.role.label()).magenta(),
+                        models::MessageRole::Assistant => format!("[{}]", m.role.label()).cyan(),
                     };
                     println!(
                         "\n📌 {} {} ({})",
@@ -120,7 +120,7 @@ fn main() {
                     println!("{}", md);
                 }
             } else {
-                eprintln!("错误: 未找到会话 ID {}", session_id);
+                eprintln!("Error: Session ID not found: {}", session_id);
                 std::process::exit(1);
             }
         }
@@ -136,7 +136,7 @@ fn main() {
                         println!("{}", serde_json::to_string(&res).unwrap());
                     } else {
                         println!(
-                            "{} 成功导出 {} 个会话至 {}",
+                            "{} Successfully exported {} sessions to {}",
                             "✓".green(),
                             count.to_string().bold(),
                             output.display().to_string().cyan()
@@ -144,7 +144,7 @@ fn main() {
                     }
                 }
                 Err(e) => {
-                    eprintln!("导出失败: {}", e);
+                    eprintln!("Export failed: {}", e);
                     std::process::exit(1);
                 }
             }

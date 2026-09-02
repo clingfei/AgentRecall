@@ -1,6 +1,6 @@
 [package]
 name = "agentrecall"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 authors = ["Cheng Lingfei <chenglingfei@foxmail.com>"]
 description = "Unified search, history recall, and export for AI coding agents in VS Code and terminal"
