@@ -226,15 +226,10 @@ async function openAndRevealMatch(context, sessionId, anchorText, searchQuery) {
 function activate(context) {
     const treeProvider = new AgentRecallTreeProvider(context);
 
-    // Register all active and legacy TreeView IDs to ensure zero missing provider errors
+    // Register the AgentRecall TreeView IDs contributed by package.json.
     const viewIds = [
         'agentRecallHistoryView',
-        'agentRecallHistoryExplorerView',
-        'agentLensHistoryView',
-        'agentLensHistoryExplorerView',
-        'agentLensContainer',
-        'codexHistoryView',
-        'codexHistoryExplorerView'
+        'agentRecallHistoryExplorerView'
     ];
 
     for (const vid of viewIds) {
@@ -246,7 +241,7 @@ function activate(context) {
     }
 
     const contentProvider = new AgentRecallContentProvider(context);
-    const schemes = ['agentrecall', 'agent-recall', 'agentlens', 'agent-lens', 'codex-chat'];
+    const schemes = ['agentrecall'];
     for (const scheme of schemes) {
         context.subscriptions.push(
             vscode.workspace.registerTextDocumentContentProvider(scheme, contentProvider)
@@ -334,12 +329,7 @@ function activate(context) {
         quickPick.show();
     };
 
-    const cmdNames = [
-        'agentrecall.search',
-        'agentlens.search',
-        'agentLens.search',
-        'codexSearch.search'
-    ];
+    const cmdNames = ['agentrecall.search'];
     for (const cmd of cmdNames) {
         context.subscriptions.push(vscode.commands.registerCommand(cmd, searchHandler));
     }
@@ -349,12 +339,7 @@ function activate(context) {
         treeProvider.refresh();
         vscode.window.showInformationMessage('AgentRecall 历史会话列表已刷新');
     };
-    const refreshCmds = [
-        'agentrecall.refreshHistory',
-        'agentlens.refreshHistory',
-        'agentLens.refreshHistory',
-        'codexSearch.refreshHistory'
-    ];
+    const refreshCmds = ['agentrecall.refreshHistory'];
     for (const cmd of refreshCmds) {
         context.subscriptions.push(vscode.commands.registerCommand(cmd, refreshHandler));
     }
@@ -379,12 +364,7 @@ function activate(context) {
             vscode.window.showErrorMessage(`导出失败: ${e.message}`);
         }
     };
-    const syncCmds = [
-        'agentrecall.syncToWorkspace',
-        'agentlens.syncToWorkspace',
-        'agentLens.syncToWorkspace',
-        'codexSearch.syncToWorkspace'
-    ];
+    const syncCmds = ['agentrecall.syncToWorkspace'];
     for (const cmd of syncCmds) {
         context.subscriptions.push(vscode.commands.registerCommand(cmd, syncHandler));
     }

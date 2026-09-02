@@ -1,7 +1,13 @@
 .vscode/**
 .vscode-test/**
+.github/**
+.nvmrc
 *.vsix
 .gitignore
+RELEASING.md
 polyfill.js
 target/**
+src/**
+Cargo.toml
 Cargo.lock
+package-lock.json

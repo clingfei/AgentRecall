@@ -1,8 +1,8 @@
 <p align="center">
-  <img src="resources/logo.png" width="180" alt="AgentLens Logo" style="border-radius: 24px;" />
+  <img src="resources/logo.png" width="180" alt="AgentRecall Logo" style="border-radius: 24px;" />
 </p>
 
-<h1 align="center">AgentLens</h1>
+<h1 align="center">AgentRecall</h1>
 
 <p align="center">
   <strong>A unified lens to search, inspect, and export conversation history across AI coding agents in VS Code.</strong>
@@ -45,10 +45,10 @@
     - 🤖 `## 🤖 回答输出 (Response)`
 
 - 📂 **Dual Sidebar Views**
-  - Browse historical sessions by update time in both the **Activity Bar (AgentLens)** and the **Explorer (File Tree)** panel.
+  - Browse historical sessions by update time in both the **Activity Bar (AgentRecall)** and the **Explorer (File Tree)** panel.
 
 - 🚀 **Workspace Sync for Native `Ctrl + Shift + F`**
-  - Export all sessions as clean `.md` files into `.agentlens-history/` in your workspace, allowing VS Code's native global search to index all agent dialogues.
+  - Export all sessions as clean `.md` files into `.agentrecall-history/` in your workspace, allowing VS Code's native global search to index all agent dialogues.
 
 ---
 
@@ -57,13 +57,13 @@
 | Shortcut / Command | Action |
 | :--- | :--- |
 | `Ctrl + Alt + F` (Mac: `Cmd + Alt + F`) | **Search Agent History**: Global real-time dialogue search |
-| `AgentLens: Export All Chats to Workspace` | Export all sessions to workspace for native global search |
-| `AgentLens: Refresh History` | Reload and refresh the conversation list |
+| `AgentRecall: Export All Chats to Workspace` | Export all sessions to workspace for native global search |
+| `AgentRecall: Refresh History` | Reload and refresh the conversation list |
 
 ---
 
 ## 🏗️ Architecture
 
 - Built as a lightweight, zero-dependency VS Code extension.
-- Uses VS Code's native `TextDocumentContentProvider` (`agentlens:/chat/<id>.md`) for memory-efficient virtual Markdown rendering.
+- Uses VS Code's native `TextDocumentContentProvider` (`agentrecall:/chat/<id>.md`) for memory-efficient virtual Markdown rendering.
 - Extensible multi-agent parser architecture designed to support disparate local session formats seamlessly.

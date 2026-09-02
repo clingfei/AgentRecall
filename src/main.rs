@@ -10,7 +10,7 @@ use std::path::PathBuf;
 #[derive(Parser)]
 #[command(name = "agentrecall")]
 #[command(about = "Unified search, history recall, and export across AI coding agents (Codex, OpenCode, AGY, Claude Code)", long_about = None)]
-#[command(version = "0.1.0")]
+#[command(version)]
 struct Cli {
     #[command(subcommand)]
     command: Commands,

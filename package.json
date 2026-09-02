@@ -8,11 +8,14 @@
   "icon": "resources/logo.png",
   "repository": {
     "type": "git",
-    "url": "https://github.com/clingfei/agent-recall"
+    "url": "https://github.com/clingfei/AgentRecall"
   },
   "scripts": {
-    "package": "NODE_OPTIONS=\"--require ./polyfill.js\" npx --yes @vscode/vsce package",
-    "publish": "NODE_OPTIONS=\"--require ./polyfill.js\" npx --yes @vscode/vsce publish"
+    "package": "vsce package",
+    "publish": "vsce publish"
+  },
+  "devDependencies": {
+    "@vscode/vsce": "3.9.2"
   },
   "keywords": [
     "codex",

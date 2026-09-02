@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
   pull_request:
-    branches: [ "main" ]
+    branches: ["main"]
 
 env:
   CARGO_TERM_COLOR: always
@@ -26,10 +26,10 @@ jobs:
         uses: Swatinem/rust-cache@v2
 
       - name: Cargo Check
-        run: cargo check --verbose
+        run: cargo check --locked --verbose
 
       - name: Run Tests
-        run: cargo test --verbose
+        run: cargo test --locked --verbose
 
   lint-extension:
     name: Lint & Verify Extension
@@ -40,7 +40,11 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
+          cache: npm
+
+      - name: Install Node.js dependencies
+        run: npm ci
 
       - name: Check extension syntax
-        run: node -c extension.js
+        run: node --check extension.js

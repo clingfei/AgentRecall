@@ -1,45 +1,92 @@
-name: Release Multi-Platform VSIX
+name: Release AgentRecall
 
 on:
   push:
     tags:
-      - "v*"
-  workflow_dispatch:
+      - "v*.*.*"
 
 permissions:
-  contents: write
-  id-token: write # Required for Microsoft Entra ID OIDC Workload Identity Federation
+  contents: read
+
+concurrency:
+  group: vscode-marketplace-release
+  cancel-in-progress: false
+
+env:
+  CARGO_TERM_COLOR: always
 
 jobs:
+  validate:
+    name: Validate release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install Node.js dependencies
+        run: npm ci
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Rust cache
+        uses: Swatinem/rust-cache@v2
+
+      - name: Verify release versions
+        shell: bash
+        run: |
+          if [[ ! "$GITHUB_REF_NAME" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Expected a semantic-version tag such as v0.1.0, got: $GITHUB_REF_NAME" >&2
+            exit 1
+          fi
+
+          tag_version="${GITHUB_REF_NAME#v}"
+          package_version="$(node -p "require('./package.json').version")"
+          cargo_version="$(cargo metadata --no-deps --format-version 1 | jq -r '.packages[] | select(.name == "agentrecall") | .version')"
+
+          if [[ "$tag_version" != "$package_version" || "$tag_version" != "$cargo_version" ]]; then
+            echo "Version mismatch: tag=$tag_version package.json=$package_version Cargo.toml=$cargo_version" >&2
+            exit 1
+          fi
+
+      - name: Check extension syntax
+        run: node --check extension.js
+
+      - name: Run Rust tests
+        run: cargo test --locked --verbose
+
   build-and-package:
     name: Build VSIX (${{ matrix.vsce_target }})
+    needs: validate
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
         include:
-          # Linux x64
           - os: ubuntu-latest
             target: x86_64-unknown-linux-gnu
             vsce_target: linux-x64
             binary_name: agentrecall
             use_cross: false
 
-          # Linux ARM64
           - os: ubuntu-latest
             target: aarch64-unknown-linux-gnu
             vsce_target: linux-arm64
             binary_name: agentrecall
             use_cross: true
 
-          # macOS ARM64 (Apple Silicon)
           - os: macos-latest
             target: aarch64-apple-darwin
             vsce_target: darwin-arm64
             binary_name: agentrecall
             use_cross: false
 
-          # Windows x64
           - os: windows-latest
             target: x86_64-pc-windows-msvc
             vsce_target: win32-x64
@@ -53,99 +100,165 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
+          cache: npm
+
+      - name: Install Node.js dependencies
+        run: npm ci
 
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
         with:
           targets: ${{ matrix.target }}
 
-      - name: Rust Cache
+      - name: Rust cache
         uses: Swatinem/rust-cache@v2
         with:
           key: ${{ matrix.target }}
 
-      - name: Install cross (for linux-arm64)
+      - name: Install cross for Linux ARM64
         if: matrix.use_cross
-        run: cargo install cross --git https://github.com/cross-rs/cross
+        run: cargo install cross --git https://github.com/cross-rs/cross --locked
 
-      - name: Build Rust Binary (Native / Cross)
+      - name: Build Rust binary
         shell: bash
         run: |
-          if [ "${{ matrix.use_cross }}" = "true" ]; then
-            cross build --release --target ${{ matrix.target }}
+          if [[ "${{ matrix.use_cross }}" == "true" ]]; then
+            cross build --locked --release --target "${{ matrix.target }}"
           else
-            cargo build --release --target ${{ matrix.target }}
+            cargo build --locked --release --target "${{ matrix.target }}"
           fi
 
-      - name: Prepare bin directory for extension package
+      - name: Prepare native binary
         shell: bash
         run: |
           mkdir -p bin
-          cp target/${{ matrix.target }}/release/${{ matrix.binary_name }} bin/${{ matrix.binary_name }}
-          chmod +x bin/${{ matrix.binary_name }} || true
+          cp "target/${{ matrix.target }}/release/${{ matrix.binary_name }}" "bin/${{ matrix.binary_name }}"
+          chmod +x "bin/${{ matrix.binary_name }}" || true
 
-      - name: Package VSIX for ${{ matrix.vsce_target }}
+      - name: Package VSIX
         shell: bash
-        run: |
-          npx --yes @vscode/vsce package --target ${{ matrix.vsce_target }} -o agentrecall-${{ matrix.vsce_target }}.vsix
+        run: >-
+          npx vsce package
+          --target "${{ matrix.vsce_target }}"
+          --out "agentrecall-${{ github.ref_name }}-${{ matrix.vsce_target }}.vsix"
 
-      - name: Upload VSIX Artifact
+      - name: Upload VSIX artifact
         uses: actions/upload-artifact@v4
         with:
           name: agentrecall-${{ matrix.vsce_target }}
-          path: agentrecall-${{ matrix.vsce_target }}.vsix
+          path: agentrecall-${{ github.ref_name }}-${{ matrix.vsce_target }}.vsix
+          if-no-files-found: error
+          retention-days: 14
 
-      # Mode 1: Modern Microsoft Entra ID Workload Identity Federation (OIDC / Keyless)
-      - name: Azure Login (Entra ID OIDC)
-        if: env.AZURE_CLIENT_ID != '' && env.AZURE_TENANT_ID != ''
-        uses: azure/login@v2
-        env:
-          AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
-          AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
-        with:
-          client-id: ${{ secrets.AZURE_CLIENT_ID }}
-          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-          allow-no-subscriptions: true
-
-      - name: Publish with Entra ID Workload Identity
-        if: env.AZURE_CLIENT_ID != '' && env.AZURE_TENANT_ID != ''
-        env:
-          AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
-          AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
-        shell: bash
-        run: |
-          npx --yes @vscode/vsce publish --target ${{ matrix.vsce_target }} --azure-credential
-
-      # Mode 2: Legacy PAT Fallback (if VSCE_PAT is provided and Entra ID is not configured)
-      - name: Publish with Legacy PAT (Fallback)
-        if: env.AZURE_CLIENT_ID == '' && env.VSCE_PAT != ''
-        env:
-          VSCE_PAT: ${{ secrets.VSCE_PAT }}
-          AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
-        shell: bash
-        run: |
-          npx --yes @vscode/vsce publish --target ${{ matrix.vsce_target }} -p ${{ secrets.VSCE_PAT }}
-
-  github-release:
-    name: Create GitHub Release
+  publish-marketplace:
+    name: Publish to VS Code Marketplace
     needs: build-and-package
     runs-on: ubuntu-latest
-    if: startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch'
+    environment:
+      name: vscode-marketplace
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+      AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+      AZURE_CORE_OUTPUT: none
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Download all built VSIX artifacts
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install Node.js dependencies
+        run: npm ci
+
+      - name: Download all VSIX artifacts
         uses: actions/download-artifact@v4
         with:
           path: vsix-artifacts
           merge-multiple: true
 
-      - name: Create Release and Upload Assets
+      - name: Verify VSIX artifact set
+        shell: bash
+        run: |
+          shopt -s nullglob
+          files=(vsix-artifacts/*.vsix)
+          if [[ "${#files[@]}" -ne 4 ]]; then
+            echo "Expected 4 VSIX artifacts, found ${#files[@]}" >&2
+            exit 1
+          fi
+
+      - name: Azure login with GitHub OIDC
+        uses: azure/login@v3
+        with:
+          client-id: ${{ env.AZURE_CLIENT_ID }}
+          tenant-id: ${{ env.AZURE_TENANT_ID }}
+          allow-no-subscriptions: true
+
+      - name: Resolve Azure DevOps profile ID
+        id: marketplace-profile
+        shell: bash
+        run: |
+          profile_id="$(az rest \
+            --method get \
+            --url https://app.vssps.visualstudio.com/_apis/profile/profiles/me \
+            --resource 499b84ac-1321-427f-aa17-267ca6975798 \
+            --query id \
+            --output tsv)"
+
+          if [[ -z "$profile_id" || "$profile_id" == "null" ]]; then
+            echo "Unable to resolve the Azure DevOps profile ID for the publishing identity" >&2
+            exit 1
+          fi
+
+          echo "profile_id=$profile_id" >> "$GITHUB_OUTPUT"
+          echo "::notice title=Azure DevOps profile ID::$profile_id"
+
+      - name: Verify Marketplace publisher access
+        shell: bash
+        env:
+          MARKETPLACE_PROFILE_ID: ${{ steps.marketplace-profile.outputs.profile_id }}
+        run: |
+          if ! npx vsce verify-pat clingfei --azure-credential; then
+            echo "::error title=Marketplace authorization required::Add identity $MARKETPLACE_PROFILE_ID to publisher clingfei with the Contributor role, then rerun this job."
+            exit 1
+          fi
+
+      - name: Publish packaged VSIX files
+        shell: bash
+        run: |
+          shopt -s nullglob
+          files=(vsix-artifacts/*.vsix)
+          npx vsce publish --azure-credential --skip-duplicate --packagePath "${files[@]}"
+
+  github-release:
+    name: Create GitHub release
+    needs: publish-marketplace
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download all VSIX artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: vsix-artifacts
+          merge-multiple: true
+
+      - name: Generate checksums
+        working-directory: vsix-artifacts
+        run: sha256sum *.vsix > SHA256SUMS
+
+      - name: Create release and upload assets
         uses: softprops/action-gh-release@v2
         with:
-          files: vsix-artifacts/*.vsix
+          files: |
+            vsix-artifacts/*.vsix
+            vsix-artifacts/SHA256SUMS
           generate_release_notes: true
           draft: false
           prerelease: false
