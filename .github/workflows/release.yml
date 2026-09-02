@@ -6,6 +6,10 @@ on:
       - "v*"
   workflow_dispatch:
 
+permissions:
+  contents: write
+  id-token: write # Required for Microsoft Entra ID OIDC Workload Identity Federation
+
 jobs:
   build-and-package:
     name: Build VSIX (${{ matrix.vsce_target }})
@@ -92,10 +96,33 @@ jobs:
           name: agentrecall-${{ matrix.vsce_target }}
           path: agentrecall-${{ matrix.vsce_target }}.vsix
 
-      - name: Publish to VS Code Marketplace (if VSCE_PAT is set)
-        if: env.VSCE_PAT != ''
+      # Mode 1: Modern Microsoft Entra ID Workload Identity Federation (OIDC / Keyless)
+      - name: Azure Login (Entra ID OIDC)
+        if: env.AZURE_CLIENT_ID != '' && env.AZURE_TENANT_ID != ''
+        uses: azure/login@v2
+        env:
+          AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          allow-no-subscriptions: true
+
+      - name: Publish with Entra ID Workload Identity
+        if: env.AZURE_CLIENT_ID != '' && env.AZURE_TENANT_ID != ''
+        env:
+          AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+        shell: bash
+        run: |
+          npx --yes @vscode/vsce publish --target ${{ matrix.vsce_target }} --azure-credential
+
+      # Mode 2: Legacy PAT Fallback (if VSCE_PAT is provided and Entra ID is not configured)
+      - name: Publish with Legacy PAT (Fallback)
+        if: env.AZURE_CLIENT_ID == '' && env.VSCE_PAT != ''
         env:
           VSCE_PAT: ${{ secrets.VSCE_PAT }}
+          AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
         shell: bash
         run: |
           npx --yes @vscode/vsce publish --target ${{ matrix.vsce_target }} -p ${{ secrets.VSCE_PAT }}
