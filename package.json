@@ -1,0 +1,115 @@
+{
+  "name": "agentrecall",
+  "displayName": "AgentRecall",
+  "description": "Unified search, history recall, and export for AI coding agents (OpenAI Codex, OpenCode, AGY, Claude Code) in VS Code.",
+  "publisher": "clingfei",
+  "version": "0.1.0",
+  "license": "MIT",
+  "icon": "resources/logo.png",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/clingfei/agent-recall"
+  },
+  "scripts": {
+    "package": "NODE_OPTIONS=\"--require ./polyfill.js\" npx --yes @vscode/vsce package",
+    "publish": "NODE_OPTIONS=\"--require ./polyfill.js\" npx --yes @vscode/vsce publish"
+  },
+  "keywords": [
+    "codex",
+    "opencode",
+    "claude",
+    "agy",
+    "antigravity",
+    "chat",
+    "search",
+    "history",
+    "recall",
+    "agent"
+  ],
+  "engines": {
+    "vscode": "^1.75.0"
+  },
+  "categories": [
+    "Other",
+    "Search"
+  ],
+  "activationEvents": [
+    "onView:agentRecallHistoryView",
+    "onView:agentRecallHistoryExplorerView",
+    "onCommand:agentrecall.search",
+    "onCommand:agentrecall.refreshHistory",
+    "onCommand:agentrecall.syncToWorkspace"
+  ],
+  "main": "./extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "agentrecall.search",
+        "title": "Search Agent History (搜索会话记录)",
+        "category": "AgentRecall",
+        "icon": "$(search)"
+      },
+      {
+        "command": "agentrecall.refreshHistory",
+        "title": "Refresh History (刷新历史记录)",
+        "category": "AgentRecall",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "agentrecall.syncToWorkspace",
+        "title": "Export All Chats to Workspace (导出到工作区以便全文搜索)",
+        "category": "AgentRecall",
+        "icon": "$(export)"
+      }
+    ],
+    "keybindings": [
+      {
+        "command": "agentrecall.search",
+        "key": "ctrl+alt+f",
+        "mac": "cmd+alt+f"
+      }
+    ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "agentRecallContainer",
+          "title": "AgentRecall",
+          "icon": "resources/icon.svg"
+        }
+      ]
+    },
+    "views": {
+      "agentRecallContainer": [
+        {
+          "id": "agentRecallHistoryView",
+          "name": "AgentRecall"
+        }
+      ],
+      "explorer": [
+        {
+          "id": "agentRecallHistoryExplorerView",
+          "name": "AgentRecall (历史会话)"
+        }
+      ]
+    },
+    "menus": {
+      "view/title": [
+        {
+          "command": "agentrecall.search",
+          "when": "view == agentRecallHistoryView || view == agentRecallHistoryExplorerView",
+          "group": "navigation@1"
+        },
+        {
+          "command": "agentrecall.syncToWorkspace",
+          "when": "view == agentRecallHistoryView || view == agentRecallHistoryExplorerView",
+          "group": "navigation@2"
+        },
+        {
+          "command": "agentrecall.refreshHistory",
+          "when": "view == agentRecallHistoryView || view == agentRecallHistoryExplorerView",
+          "group": "navigation@3"
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,7 @@
+.vscode/**
+.vscode-test/**
+*.vsix
+.gitignore
+polyfill.js
+target/**
+Cargo.lock
